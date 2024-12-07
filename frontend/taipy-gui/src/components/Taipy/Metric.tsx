@@ -10,7 +10,6 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 import React, { CSSProperties, lazy, Suspense, useMemo } from "react";
 import { Data, Delta, Layout } from "plotly.js";
 import Box from "@mui/material/Box";
@@ -22,9 +21,7 @@ import { extractPrefix, extractSuffix, sprintfToD3Converter } from "../../utils/
 import { TaipyBaseProps, TaipyHoverProps } from "./utils";
 import { darkThemeTemplate } from "../../themes/darkThemeTemplate";
 import { getComponentClassName } from "./TaipyStyle";
-
 const Plot = lazy(() => import("react-plotly.js"));
-
 interface MetricProps extends TaipyBaseProps, TaipyHoverProps {
     value?: number;
     defaultValue?: number;
@@ -51,12 +48,10 @@ interface MetricProps extends TaipyBaseProps, TaipyHoverProps {
     template_Dark_?: string;
     template_Light_?: string;
 }
-
 const emptyLayout = {} as Partial<Layout>;
 const defaultStyle = { position: "relative", display: "inline-block", width: "100%" } as CSSProperties;
 const skeletonStyle = { ...defaultStyle, minHeight: "7em" };
 const plotConfig = { displaylogo: false };
-
 const Metric = (props: MetricProps) => {
     const { showValue = true } = props;
     const value = useDynamicProperty(props.value, props.defaultValue, 0);
@@ -66,7 +61,6 @@ const Metric = (props: MetricProps) => {
     const baseLayout = useDynamicJsonProperty(props.layout, props.defaultLayout || "", emptyLayout);
     const hover = useDynamicProperty(props.hoverText, props.defaultHoverText, undefined);
     const theme = useTheme();
-
     const colorMap = useMemo(() => {
         try {
             const obj = props.colorMap ? JSON.parse(props.colorMap) : null;
@@ -85,7 +79,6 @@ const Metric = (props: MetricProps) => {
         }
         return undefined;
     }, [props.colorMap, props.max]);
-
     const data = useMemo(() => {
         const mode = typeof props.type === "string" && props.type.toLowerCase() === "none" ? [] : ["gauge"];
         showValue && mode.push("number");
@@ -154,12 +147,35 @@ const Metric = (props: MetricProps) => {
         showValue,
         colorMap,
     ]);
-
+    /* React-plotly-js only accepts numerical widths/heights, but our Metric component
+     * accepts numbers or strings. To use react-plotly-js, we need to convert our
+     * potential string width/height into a number of pixels */
+    const normalizeSize = (val: string | number | undefined): number | undefined => {
+      if (typeof val !== "string") {
+        return typeof val === "number" ? val : undefined;
+      }
+      const containsOnlyNumbers = (str: string): boolean => {
+        return /^\d+$/.test(str);
+      }
+      if (containsOnlyNumbers(val)) {
+        return parseInt(val, 10);
+      }
+      // Simulate size with HTML element, then measure size in pixels
+      const tempElement = document.createElement("div");
+      tempElement.style.position = "absolute";
+      tempElement.style.visibility = "hidden";
+      tempElement.style.height = val;
+      tempElement.style.width = "auto";
+      document.body.appendChild(tempElement);
+      const pixels = tempElement.offsetHeight;
+      document.body.removeChild(tempElement);
+      return pixels;
+    }
     const layout = useMemo(() => {
         const layout = {
             ...baseLayout,
-            height: baseLayout.height !== undefined ? baseLayout.height : props.height,
-            width: baseLayout.width !== undefined ? baseLayout.width : props.width,
+            height: baseLayout.height !== undefined ? baseLayout.height : normalizeSize(props.height),
+            width: baseLayout.width !== undefined ? baseLayout.width : normalizeSize(props.width),
         };
         let template = undefined;
         try {
@@ -177,11 +193,9 @@ const Metric = (props: MetricProps) => {
         if (template) {
             layout.template = template;
         }
-
         if (props.title) {
             layout.title = props.title;
         }
-
         return layout as Partial<Layout>;
     }, [
         props.title,
@@ -193,7 +207,6 @@ const Metric = (props: MetricProps) => {
         theme.palette.mode,
         baseLayout,
     ]);
-
     return (
         <Tooltip title={hover || ""}>
             <Box className={`${className} ${getComponentClassName(props.children)}`}>
@@ -205,9 +218,7 @@ const Metric = (props: MetricProps) => {
         </Tooltip>
     );
 };
-
 export default Metric;
-
 const { colorscale, colorway, font } = darkThemeTemplate.layout;
 const darkTemplate = {
     layout: {
