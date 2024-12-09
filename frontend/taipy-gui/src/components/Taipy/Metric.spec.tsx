@@ -359,4 +359,45 @@ describe("Metric Component", () => {
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Error while parsing Metric.template"));
         consoleSpy.mockRestore();
     });
+
+    // Test cases for normalizeSize
+    it("correctly normalizes size when width is provided as a number", async () => {
+        const { container } = render(<Metric width={700} />);
+        await waitFor(() => {
+            const elt = container.querySelector(".svg-container");
+            expect(elt).toHaveStyle({
+                width: "700px",
+            });
+        });
+    });
+
+    it("correctly normalizes size when width is provided as a string", async () => {
+        const { container } = render(<Metric width="700px" />);
+        await waitFor(() => {
+            const elt = container.querySelector(".svg-container");
+            expect(elt).toHaveStyle({
+                width: "700px",
+            });
+        });
+    });
+
+    it("correctly normalizes size when height is provided as a number", async () => {
+        const { container } = render(<Metric height={400} />);
+        await waitFor(() => {
+            const elt = container.querySelector(".svg-container");
+            expect(elt).toHaveStyle({
+                height: "400px",
+            });
+        });
+    });
+
+    it("correctly normalizes size when height is provided as a string", async () => {
+        const { container } = render(<Metric height="450px" />);
+        await waitFor(() => {
+            const elt = container.querySelector(".svg-container");
+            expect(elt).toHaveStyle({
+                height: "450px",
+            });
+        });
+    });
 });
